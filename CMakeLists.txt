@@ -42,10 +42,10 @@ if(NOT nlohmann_json_FOUND)
 endif()
 
 # Find  Ginkgo find_package(Ginkgo 1.7.0 QUIET)
-find_package(ginkgo QUIET)
+find_package(Ginkgo REQUIRED)
 
 # Fetch Ginkgo if not found
-if(NOT ginkgo_FOUND)
+if(NOT Ginkgo_FOUND)
   # If not found, fetch Ginkgo
   include(FetchContent)
   if(NOT DEFINED GINKGO_BUILD_TESTS)
@@ -79,6 +79,7 @@ endif()
 add_subdirectory(src/cpp_bindings)
 
 pybind11_add_module(pyGinkgoBindings ${PYGINKGO_CPP_SOURCES})
+
 
 target_include_directories(pyGinkgoBindings
                            PRIVATE ${Ginkgo_BINARY_DIR}/include)
@@ -184,14 +185,21 @@ set(CMAKE_INSTALL_RPATH ${Python_SITELIB}/${PROJECT_NAME})
 message(STATUS "Install path: ${Python_SITELIB}")
 install(DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
         DESTINATION ${Python_SITELIB})
-install(
-  IMPORTED_RUNTIME_ARTIFACTS
-  ginkgo
-  ginkgo_device
-  ginkgo_hip
-  ginkgo_cuda
-  ginkgo_omp
-  ginkgo_dpcpp
-  ginkgo_reference
-  DESTINATION
-  ${Python_SITELIB}/${PROJECT_NAME})
+
+option(BUNDLE_GINKGO_DEPENDENCIES
+  "Whether to bundle Ginkgo dependencies within pyGinkgo installation" OFF)
+
+if(BUNDLE_GINKGO_DEPENDENCIES OR NOT Ginkgo_FOUND)
+  message(STATUS "Bundling Ginkgo dependencies within pyGinkgo installation")
+  install(
+    IMPORTED_RUNTIME_ARTIFACTS
+    ginkgo
+    ginkgo_device
+    ginkgo_hip
+    ginkgo_cuda
+    ginkgo_omp
+    ginkgo_dpcpp
+    ginkgo_reference
+    DESTINATION
+    ${Python_SITELIB}/${PROJECT_NAME})
+endif()
